@@ -19,10 +19,14 @@ const durationToMs = (value: string): number => {
 };
 
 const jwtExpiresIn = process.env.JWT_EXPIRES_IN ?? '7d';
+const localDatabaseUrl = `file:${resolve(dirname(fileURLToPath(import.meta.url)), '..', process.env.SQLITE_PATH ?? 'data/orbit-notes.sqlite')}`;
+const tursoDatabaseUrl = process.env.TURSO_DATABASE_URL?.trim();
 
 export const config = {
   port: asPositiveInt(process.env.PORT, 4000),
   sqlitePath: resolve(dirname(fileURLToPath(import.meta.url)), '..', process.env.SQLITE_PATH ?? 'data/orbit-notes.sqlite'),
+  databaseUrl: tursoDatabaseUrl || localDatabaseUrl,
+  tursoAuthToken: process.env.TURSO_AUTH_TOKEN?.trim() || undefined,
   jwtSecret: process.env.JWT_SECRET ?? 'development-only-change-this-secret',
   jwtExpiresIn,
   authCookieMaxAgeMs: durationToMs(jwtExpiresIn),

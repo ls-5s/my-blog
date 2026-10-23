@@ -5,7 +5,7 @@ import BlogShell from '../components/BlogShell.vue';
 import ArticleCard from '../components/ArticleCard.vue';
 import ProjectArtwork from '../components/ProjectArtwork.vue';
 import { usePreferences } from '../composables/preferences';
-import { categories, contacts, fallbackArticles, metrics, profile, projects, skillGroups, techStack, timeline } from '../data/site';
+import { categories, contacts, metrics, profile, projects, skillGroups, techStack, timeline } from '../data/site';
 import { publicApi } from '../services/api';
 import { articleSearchText } from '../services/articleLocale';
 import type { Article } from '../types';
@@ -68,7 +68,7 @@ onMounted(async () => {
     loadedArticles = await publicApi.listArticles();
   } catch (reason) {
     loadError = reason instanceof Error ? reason.message : '';
-    loadedArticles = fallbackArticles;
+    loadedArticles = [];
   }
 
   await waitForBoot();

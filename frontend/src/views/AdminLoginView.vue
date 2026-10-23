@@ -4,7 +4,7 @@ import { ArrowRight, KeyRound, LockKeyhole } from 'lucide-vue-next';
 import { useRoute, useRouter } from 'vue-router';
 import { useSessionStore } from '../stores/session';
 
-const username = ref('liyang');
+const username = ref('');
 const password = ref('');
 const error = ref('');
 const showPassword = ref(false);

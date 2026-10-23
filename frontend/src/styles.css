@@ -3226,7 +3226,7 @@ html[data-theme="light"] .skill-group {
   border-radius: 999px;
   color: var(--text-soft);
   font-family: var(--font-display);
-  font-size: 9px;
+  font-size: 12px;
 }
 
 .tech-stack {
@@ -3319,7 +3319,7 @@ html[data-theme="light"] .tech-stack__group {
   background: rgba(255, 255, 255, 0.025);
   color: var(--text-soft);
   font-family: var(--font-display);
-  font-size: 9px;
+  font-size: 12px;
   letter-spacing: 0.015em;
   line-height: 1.2;
 }
@@ -3384,7 +3384,7 @@ html[data-theme="light"] .tech-stack__group {
 .timeline-item__company {
   display: block;
   color: var(--faint);
-  font-size: 9px;
+  font-size: 12px;
   letter-spacing: 0.06em;
   overflow-wrap: anywhere;
 }
@@ -3392,7 +3392,7 @@ html[data-theme="light"] .tech-stack__group {
 .timeline-item p {
   margin: 15px 0 0;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.7;
   overflow-wrap: anywhere;
 }
@@ -4687,7 +4687,7 @@ body.motion-ready .reveal.is-visible {
   .site-header {
     grid-template-columns: 1fr auto;
     width: calc(100vw - 28px);
-    top: 12px;
+    top: max(12px, env(safe-area-inset-top));
     min-height: 62px;
     padding-left: 14px;
   }

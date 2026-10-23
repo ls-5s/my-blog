@@ -1,8 +1,6 @@
-import { fallbackArticles } from '../data/site';
-import { articleSearchText } from './articleLocale';
 import type { AdminUser, ApiErrorShape, Article, ArticlePayload, ArticleStatus } from '../types';
 
-const API_BASE = (import.meta.env.VITE_API_BASE ?? 'http://localhost:4000/api').replace(/\/$/, '');
+const API_BASE = (import.meta.env.VITE_API_BASE ?? '/api').replace(/\/$/, '');
 
 export class ApiError extends Error {
   readonly status: number;
@@ -30,7 +28,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     if (error instanceof TypeError || (error instanceof Error && error.message.includes('fetch'))) {
       throw new ApiError(0, {
         code: 'API_UNAVAILABLE',
-        message: '无法连接到服务器，请检查后端服务与 SQLite 数据库是否正常',
+        message: '无法连接到文章 API，请检查后端服务与 API 地址配置',
       });
     }
     throw error;
@@ -43,44 +41,18 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   return (body?.data ?? body) as T;
 }
 
-const isNetworkError = (error: unknown): boolean => error instanceof ApiError
-  ? error.code === 'API_UNAVAILABLE'
-  : error instanceof TypeError || (error instanceof Error && error.message.includes('fetch'));
-
 export const publicApi = {
   async listArticles(filters: { q?: string; category?: string } = {}): Promise<Article[]> {
-    try {
-      const params = new URLSearchParams();
-      if (filters.q) params.set('q', filters.q);
-      if (filters.category && filters.category !== 'all') params.set('category', filters.category);
-      return await request<Article[]>(`/articles${params.size ? `?${params.toString()}` : ''}`);
-    } catch (error) {
-      if (!isNetworkError(error)) throw error;
-      const query = filters.q?.toLowerCase() ?? '';
-      return fallbackArticles.filter((article) => {
-        const categoryMatch = !filters.category || filters.category === 'all' || article.category === filters.category;
-        const queryMatch = !query || articleSearchText(article).toLowerCase().includes(query);
-        return categoryMatch && queryMatch;
-      });
-    }
+    const params = new URLSearchParams();
+    if (filters.q) params.set('q', filters.q);
+    if (filters.category && filters.category !== 'all') params.set('category', filters.category);
+    return request<Article[]>(`/articles${params.size ? `?${params.toString()}` : ''}`);
   },
   async getArticle(slug: string): Promise<Article> {
-    try {
-      return await request<Article>(`/articles/${encodeURIComponent(slug)}`);
-    } catch (error) {
-      if (!isNetworkError(error)) throw error;
-      const article = fallbackArticles.find((item) => item.slug === slug);
-      if (!article) throw new ApiError(404, { code: 'ARTICLE_NOT_FOUND', message: '文章不存在' });
-      return article;
-    }
+    return request<Article>(`/articles/${encodeURIComponent(slug)}`);
   },
   async listCategories(): Promise<string[]> {
-    try {
-      return await request<string[]>('/categories');
-    } catch (error) {
-      if (!isNetworkError(error)) throw error;
-      return [...new Set(fallbackArticles.map((article) => article.category))];
-    }
+    return request<string[]>('/categories');
   },
 };
 

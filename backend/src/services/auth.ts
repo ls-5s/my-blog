@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs';
 import jwt, { type JwtPayload, type SignOptions } from 'jsonwebtoken';
 import type { Response } from 'express';
 import { config } from '../config.js';
-import { findAdmin, insertAdmin, removeOtherAdmins } from './database.js';
+import { findAdmin, insertAdmin, removeOtherAdmins } from './database.turso.js';
 
 export type AuthenticatedAdmin = {
   id: string;
@@ -47,7 +47,7 @@ export const authenticateAdmin = async (
   username: string,
   password: string,
 ): Promise<AuthenticatedAdmin | null> => {
-  const admin = findAdmin(username);
+  const admin = await findAdmin(username);
   if (!admin || !(await bcrypt.compare(password, admin.passwordHash))) return null;
   return { id: admin.id, username: admin.username, role: 'admin' };
 };
@@ -58,7 +58,7 @@ export const ensureInitialAdmin = async (): Promise<void> => {
     return;
   }
   const passwordHash = await bcrypt.hash(config.adminPassword, 12);
-  removeOtherAdmins(config.adminUsername);
-  insertAdmin({ id: `admin-${config.adminUsername}`, username: config.adminUsername, passwordHash });
+  await removeOtherAdmins(config.adminUsername);
+  await insertAdmin({ id: `admin-${config.adminUsername}`, username: config.adminUsername, passwordHash });
   console.log(`Synchronized configured admin account: ${config.adminUsername}`);
 };

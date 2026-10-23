@@ -1,14 +1,14 @@
 import { seedArticles } from '../data/seedArticles.js';
-import { getArticleBySlug, insertArticle, updateArticle } from './database.js';
+import { getArticleBySlug, insertArticle, updateArticle } from './database.turso.js';
 
 /** Add missing sample articles and backfill English fields without replacing edited content. */
 export const ensureSeedArticles = async (): Promise<void> => {
   let seeded = 0;
   let translated = 0;
   for (const seed of seedArticles) {
-    const existing = getArticleBySlug(seed.slug);
+    const existing = await getArticleBySlug(seed.slug);
     if (!existing) {
-      insertArticle(seed);
+      await insertArticle(seed);
       seeded += 1;
       continue;
     }
@@ -21,7 +21,7 @@ export const ensureSeedArticles = async (): Promise<void> => {
     if (!existing.summaryEn) patch.summaryEn = seed.summaryEn;
     if (!existing.contentMarkdownEn) patch.contentMarkdownEn = seed.contentMarkdownEn;
     if (Object.keys(patch).length) {
-      updateArticle(existing._id, patch);
+      await updateArticle(existing._id, patch);
       translated += 1;
     }
   }

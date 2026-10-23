@@ -20,7 +20,7 @@ npm run dev:frontend
 
 SQLite 数据库会自动创建在 `backend/data/orbit-notes.sqlite`。前端默认地址为 `http://localhost:5173`，后端默认为 `http://localhost:4000`。
 
-在 `backend/.env` 配置 `SQLITE_PATH`、`JWT_SECRET`、`ADMIN_USERNAME` 和 `ADMIN_PASSWORD`。首次启动时会创建管理员账号，并幂等导入示例文章。
+在 `backend/.env` 配置 `JWT_SECRET`、`ADMIN_USERNAME` 和 `ADMIN_PASSWORD`。默认使用 `SQLITE_PATH` 指向的本地 SQLite 文件；部署到 Turso 时，同时设置 `TURSO_DATABASE_URL` 和 `TURSO_AUTH_TOKEN`，数据库表会在首次启动时自动初始化。首次启动时会创建管理员账号，并幂等导入示例文章。
 
 ## 路由
 
