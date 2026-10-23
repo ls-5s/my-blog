@@ -1,6 +1,17 @@
 import type { AdminUser, ApiErrorShape, Article, ArticlePayload, ArticleStatus } from '../types';
 
 const API_BASE = (import.meta.env.VITE_API_BASE ?? '/api').replace(/\/$/, '');
+const TOKEN_KEY = 'orbit-notes-admin-token';
+
+const getSessionToken = (): string | null => typeof window === 'undefined'
+  ? null
+  : window.sessionStorage.getItem(TOKEN_KEY);
+
+const setSessionToken = (token: string | null): void => {
+  if (typeof window === 'undefined') return;
+  if (token) window.sessionStorage.setItem(TOKEN_KEY, token);
+  else window.sessionStorage.removeItem(TOKEN_KEY);
+};
 
 export class ApiError extends Error {
   readonly status: number;
@@ -17,11 +28,16 @@ export class ApiError extends Error {
 }
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const token = getSessionToken();
   let response: Response;
   try {
     response = await fetch(`${API_BASE}${path}`, {
       credentials: 'include',
-      headers: { 'Content-Type': 'application/json', ...(options.headers ?? {}) },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(options.headers ?? {}),
+      },
       ...options,
     });
   } catch (error) {
@@ -36,6 +52,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
   const body = response.status === 204 ? undefined : await response.json().catch(() => undefined);
   if (!response.ok) {
+    if (response.status === 401) setSessionToken(null);
     throw new ApiError(response.status, body?.error ?? { message: '请求失败' });
   }
   return (body?.data ?? body) as T;
@@ -57,14 +74,23 @@ export const publicApi = {
 };
 
 export const authApi = {
-  login(username: string, password: string): Promise<AdminUser> {
-    return request<AdminUser>('/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) });
+  async login(username: string, password: string): Promise<AdminUser> {
+    const result = await request<{ user: AdminUser; token: string }>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ username, password }),
+    });
+    setSessionToken(result.token);
+    return result.user;
   },
   me(): Promise<AdminUser> {
     return request<AdminUser>('/auth/me');
   },
-  logout(): Promise<void> {
-    return request<void>('/auth/logout', { method: 'POST' });
+  async logout(): Promise<void> {
+    try {
+      await request<void>('/auth/logout', { method: 'POST' });
+    } finally {
+      setSessionToken(null);
+    }
   },
 };
 

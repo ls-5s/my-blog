@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { loginSchema } from '../validation.js';
 import { AppError } from '../middleware/error.js';
-import { authenticateAdmin, clearAuthCookie, setAuthCookie } from '../services/auth.js';
+import { authenticateAdmin, clearAuthCookie, setAuthCookie, signAdminToken } from '../services/auth.js';
 import { requireAdmin } from '../middleware/auth.js';
 
 export const authRouter = Router();
@@ -12,7 +12,7 @@ authRouter.post('/login', async (request, response, next) => {
     const admin = await authenticateAdmin(username, password);
     if (!admin) throw new AppError(401, 'INVALID_CREDENTIALS', '用户名或密码错误');
     setAuthCookie(response, admin);
-    response.json({ data: admin });
+    response.json({ data: { user: admin, token: signAdminToken(admin) } });
   } catch (error) {
     next(error);
   }

@@ -52,6 +52,7 @@ app.use(cors({
     callback(null, false);
   },
   credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 app.use(express.json({ limit: '1mb' }));
 app.use(cookieParser());
