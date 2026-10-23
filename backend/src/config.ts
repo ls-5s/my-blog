@@ -22,7 +22,7 @@ const jwtExpiresIn = process.env.JWT_EXPIRES_IN ?? '7d';
 
 export const config = {
   port: asPositiveInt(process.env.PORT, 4000),
-  mongodbUri: process.env.MONGODB_URI ?? 'mongodb://127.0.0.1:27017/vue-blog-admin',
+  sqlitePath: resolve(dirname(fileURLToPath(import.meta.url)), '..', process.env.SQLITE_PATH ?? 'data/orbit-notes.sqlite'),
   jwtSecret: process.env.JWT_SECRET ?? 'development-only-change-this-secret',
   jwtExpiresIn,
   authCookieMaxAgeMs: durationToMs(jwtExpiresIn),

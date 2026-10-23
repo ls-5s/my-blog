@@ -10,7 +10,30 @@ import { errorHandler, notFound } from './middleware/error.js';
 export const app = express();
 
 app.disable('x-powered-by');
-app.use(cors({ origin: config.frontendOrigin, credentials: true }));
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || origin === config.frontendOrigin) {
+      callback(null, origin ?? config.frontendOrigin);
+      return;
+    }
+
+    if (!config.isProduction) {
+      try {
+        const url = new URL(origin);
+        const isLocalFrontend = url.protocol === 'http:'
+          && ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
+        callback(null, isLocalFrontend ? origin : false);
+        return;
+      } catch {
+        callback(null, false);
+        return;
+      }
+    }
+
+    callback(null, false);
+  },
+  credentials: true,
+}));
 app.use(express.json({ limit: '1mb' }));
 app.use(cookieParser());
 

@@ -4,7 +4,7 @@ import { ArrowRight, KeyRound, LockKeyhole } from 'lucide-vue-next';
 import { useRoute, useRouter } from 'vue-router';
 import { useSessionStore } from '../stores/session';
 
-const username = ref('admin');
+const username = ref('liyang');
 const password = ref('');
 const error = ref('');
 const showPassword = ref(false);
@@ -21,5 +21,27 @@ const submit = async () => {
 </script>
 
 <template>
-  <main class="login-page"><div class="login-ambient"><span></span><i></i></div><section class="login-panel"><RouterLink to="/" class="admin-brand"><span class="brand-mark">LC</span><span><strong>ORBIT NOTES</strong><small>CONTENT STUDIO</small></span></RouterLink><div class="login-copy"><p class="eyebrow">ADMIN / AUTHENTICATION</p><h1>进入文章控制台<span>.</span></h1><p>只有管理员会话可以编辑、发布或删除文章。公开访客仍可继续阅读博客。</p></div><form @submit.prevent="submit"><label>管理员账号<input v-model="username" autocomplete="username" required /></label><label>管理员密码<div class="password-input"><input v-model="password" :type="showPassword ? 'text' : 'password'" autocomplete="current-password" required /><button type="button" @click="showPassword = !showPassword">{{ showPassword ? '隐藏' : '显示' }}</button></div></label><p v-if="error" class="form-error" role="alert">{{ error }}</p><button class="button button-primary login-button" type="submit" :disabled="session.busy"><span>{{ session.busy ? '验证中…' : '登录管理后台' }}</span><ArrowRight :size="17" /></button></form><div class="login-foot"><span><LockKeyhole :size="14" /> HTTP-only session</span><span><KeyRound :size="14" /> Markdown workflow</span></div></section></main>
+  <main class="login-page">
+    <div class="login-ambient" aria-hidden="true"><span></span><i></i></div>
+    <section class="login-panel" aria-labelledby="login-title">
+      <RouterLink to="/" class="admin-brand"><span class="brand-mark">LC</span><span><strong>ORBIT NOTES</strong><small>CONTENT STUDIO</small></span></RouterLink>
+      <div class="login-copy">
+        <p class="eyebrow">ADMIN / AUTHENTICATION</p>
+        <h1 id="login-title">进入文章控制台<span>.</span></h1>
+        <p>只有管理员会话可以编辑、发布或删除文章。公开访客仍可继续阅读博客。</p>
+      </div>
+      <form @submit.prevent="submit" novalidate>
+        <label>管理员账号<input v-model="username" autocomplete="username" required :aria-invalid="Boolean(error)" /></label>
+        <label>管理员密码
+          <div class="password-input">
+            <input v-model="password" :type="showPassword ? 'text' : 'password'" autocomplete="current-password" required :aria-invalid="Boolean(error)" />
+            <button type="button" :aria-label="showPassword ? '隐藏密码' : '显示密码'" @click="showPassword = !showPassword">{{ showPassword ? '隐藏' : '显示' }}</button>
+          </div>
+        </label>
+        <p v-if="error" class="form-error" role="alert">{{ error }}</p>
+        <button class="button button-primary login-button" type="submit" :disabled="session.busy"><span>{{ session.busy ? '验证中…' : '登录管理后台' }}</span><ArrowRight :size="17" /></button>
+      </form>
+      <div class="login-foot"><span><LockKeyhole :size="14" /> HTTP-only session</span><span><KeyRound :size="14" /> Markdown workflow</span></div>
+    </section>
+  </main>
 </template>

@@ -1,17 +1,15 @@
 import { Router } from 'express';
-import { Article } from '../models/Article.js';
 import { requireAdmin } from '../middleware/auth.js';
 import { AppError } from '../middleware/error.js';
 import { articlePatchSchema, articleSchema, idSchema, listQuerySchema } from '../validation.js';
+import { deleteArticle, getArticleById, insertArticle, listArticles, updateArticle } from '../services/database.js';
 
 export const adminRouter = Router();
 adminRouter.use(requireAdmin);
 
-const escapeRegex = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-const getArticleOrThrow = async (id: string) => {
+const getArticleOrThrow = (id: string) => {
   const parsedId = idSchema.parse(id);
-  const article = await Article.findById(parsedId);
+  const article = getArticleById(parsedId);
   if (!article) throw new AppError(404, 'ARTICLE_NOT_FOUND', '文章不存在');
   return article;
 };
@@ -19,15 +17,7 @@ const getArticleOrThrow = async (id: string) => {
 adminRouter.get('/articles', async (request, response, next) => {
   try {
     const query = listQuerySchema.parse(request.query);
-    const filter: Record<string, unknown> = {};
-    if (query.status) filter.status = query.status;
-    if (query.category) filter.category = query.category;
-    if (query.q) {
-      const search = escapeRegex(query.q);
-      filter.$or = [{ title: { $regex: search, $options: 'i' } }, { summary: { $regex: search, $options: 'i' } }, { tags: { $regex: search, $options: 'i' } }];
-    }
-    const sortValue = query.order === 'asc' ? 1 : -1;
-    const articles = await Article.find(filter).sort({ [query.sort]: sortValue }).lean();
+    const articles = listArticles({ q: query.q, category: query.category, status: query.status, sort: query.sort, order: query.order });
     response.json({ data: articles });
   } catch (error) {
     next(error);
@@ -36,7 +26,7 @@ adminRouter.get('/articles', async (request, response, next) => {
 
 adminRouter.get('/articles/:id', async (request, response, next) => {
   try {
-    response.json({ data: await getArticleOrThrow(request.params.id) });
+    response.json({ data: getArticleOrThrow(request.params.id) });
   } catch (error) {
     next(error);
   }
@@ -46,7 +36,7 @@ adminRouter.post('/articles', async (request, response, next) => {
   try {
     const payload = articleSchema.parse(request.body);
     if (payload.status === 'published' && !payload.publishedAt) payload.publishedAt = new Date();
-    const article = await Article.create(payload);
+    const article = insertArticle(payload);
     response.status(201).json({ data: article });
   } catch (error) {
     next(error);
@@ -57,9 +47,9 @@ adminRouter.patch('/articles/:id', async (request, response, next) => {
   try {
     const payload = articlePatchSchema.parse(request.body);
     if (payload.status === 'published' && !payload.publishedAt) payload.publishedAt = new Date();
-    const article = await getArticleOrThrow(request.params.id);
-    Object.assign(article, payload);
-    await article.save();
+    getArticleOrThrow(request.params.id);
+    const article = updateArticle(request.params.id, payload);
+    if (!article) throw new AppError(404, 'ARTICLE_NOT_FOUND', '文章不存在');
     response.json({ data: article });
   } catch (error) {
     next(error);
@@ -68,10 +58,9 @@ adminRouter.patch('/articles/:id', async (request, response, next) => {
 
 adminRouter.post('/articles/:id/publish', async (request, response, next) => {
   try {
-    const article = await getArticleOrThrow(request.params.id);
-    article.status = 'published';
-    article.publishedAt = article.publishedAt ?? new Date();
-    await article.save();
+    const existing = getArticleOrThrow(request.params.id);
+    const article = updateArticle(request.params.id, { status: 'published', publishedAt: existing.publishedAt ?? new Date() });
+    if (!article) throw new AppError(404, 'ARTICLE_NOT_FOUND', '文章不存在');
     response.json({ data: article });
   } catch (error) {
     next(error);
@@ -80,8 +69,9 @@ adminRouter.post('/articles/:id/publish', async (request, response, next) => {
 
 adminRouter.delete('/articles/:id', async (request, response, next) => {
   try {
-    const article = await getArticleOrThrow(request.params.id);
-    await article.deleteOne();
+    getArticleOrThrow(request.params.id);
+    const deleted = deleteArticle(request.params.id);
+    if (!deleted) throw new AppError(404, 'ARTICLE_NOT_FOUND', '文章不存在');
     response.status(204).send();
   } catch (error) {
     next(error);

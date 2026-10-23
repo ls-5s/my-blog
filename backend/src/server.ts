@@ -1,11 +1,11 @@
-import mongoose from 'mongoose';
 import { app } from './app.js';
 import { config } from './config.js';
 import { ensureInitialAdmin } from './services/auth.js';
 import { ensureSeedArticles } from './services/seed.js';
+import { closeDatabase, getDatabase } from './services/database.js';
 
 const start = async (): Promise<void> => {
-  await mongoose.connect(config.mongodbUri);
+  getDatabase();
   await ensureInitialAdmin();
   await ensureSeedArticles();
   const server = app.listen(config.port, () => {
@@ -15,7 +15,7 @@ const start = async (): Promise<void> => {
   const shutdown = async (signal: string): Promise<void> => {
     console.log(`${signal} received, shutting down`);
     server.close(async () => {
-      await mongoose.disconnect();
+      closeDatabase();
       process.exit(0);
     });
   };

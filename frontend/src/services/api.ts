@@ -26,6 +26,12 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
       ...options,
     });
   } catch (error) {
+    if (error instanceof TypeError || (error instanceof Error && error.message.includes('fetch'))) {
+      throw new ApiError(0, {
+        code: 'API_UNAVAILABLE',
+        message: '无法连接到服务器，请检查后端服务与 SQLite 数据库是否正常',
+      });
+    }
     throw error;
   }
 
@@ -36,7 +42,9 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   return (body?.data ?? body) as T;
 }
 
-const isNetworkError = (error: unknown): boolean => error instanceof TypeError || (error instanceof Error && error.message.includes('fetch'));
+const isNetworkError = (error: unknown): boolean => error instanceof ApiError
+  ? error.code === 'API_UNAVAILABLE'
+  : error instanceof TypeError || (error instanceof Error && error.message.includes('fetch'));
 
 export const publicApi = {
   async listArticles(filters: { q?: string; category?: string } = {}): Promise<Article[]> {

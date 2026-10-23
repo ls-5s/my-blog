@@ -7,5 +7,6 @@ coverage/
 .env
 .env.*
 !.env.example
+backend/data/*.sqlite*
 *.log
 npm-debug.log*

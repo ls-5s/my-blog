@@ -1,8 +1,8 @@
 import bcrypt from 'bcryptjs';
 import jwt, { type JwtPayload, type SignOptions } from 'jsonwebtoken';
 import type { Response } from 'express';
-import { Admin } from '../models/Admin.js';
 import { config } from '../config.js';
+import { findAdmin, insertAdmin, removeOtherAdmins } from './database.js';
 
 export type AuthenticatedAdmin = {
   id: string;
@@ -47,9 +47,9 @@ export const authenticateAdmin = async (
   username: string,
   password: string,
 ): Promise<AuthenticatedAdmin | null> => {
-  const admin = await Admin.findOne({ username }).lean();
+  const admin = findAdmin(username);
   if (!admin || !(await bcrypt.compare(password, admin.passwordHash))) return null;
-  return { id: String(admin._id), username: admin.username, role: 'admin' };
+  return { id: admin.id, username: admin.username, role: 'admin' };
 };
 
 export const ensureInitialAdmin = async (): Promise<void> => {
@@ -57,9 +57,8 @@ export const ensureInitialAdmin = async (): Promise<void> => {
     console.warn('ADMIN_PASSWORD is not configured; skipping initial admin creation.');
     return;
   }
-  const existing = await Admin.findOne({ username: config.adminUsername });
-  if (existing) return;
   const passwordHash = await bcrypt.hash(config.adminPassword, 12);
-  await Admin.create({ username: config.adminUsername, passwordHash, role: 'admin' });
-  console.log(`Created initial admin account: ${config.adminUsername}`);
+  removeOtherAdmins(config.adminUsername);
+  insertAdmin({ id: `admin-${config.adminUsername}`, username: config.adminUsername, passwordHash });
+  console.log(`Synchronized configured admin account: ${config.adminUsername}`);
 };

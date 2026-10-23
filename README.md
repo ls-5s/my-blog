@@ -5,23 +5,22 @@
 ## 目录
 
 - `frontend/`：Vue 3、Vite、TypeScript、Vue Router、Pinia
-- `backend/`：Node.js、Express、TypeScript、Mongoose、MongoDB
+- `backend/`：Node.js、Express、TypeScript、内置 SQLite
 - 根目录原有的 `index.html`、`styles.css` 和 `js/`：原生版本，作为迁移参考并保留
 
 ## 本地运行
 
-准备 Node.js 20+ 和 MongoDB，然后分别安装依赖：
+准备 Node.js 22.13+，然后安装依赖：
 
 ```powershell
 npm install
-Copy-Item backend/.env.example backend/.env
 npm run dev:backend
 npm run dev:frontend
 ```
 
-前端默认地址为 `http://localhost:5173`，后端默认为 `http://localhost:4000`。
+SQLite 数据库会自动创建在 `backend/data/orbit-notes.sqlite`。前端默认地址为 `http://localhost:5173`，后端默认为 `http://localhost:4000`。
 
-在 `backend/.env` 配置 `MONGODB_URI`、`JWT_SECRET`、`ADMIN_USERNAME` 和 `ADMIN_PASSWORD`。服务首次连接数据库时会创建管理员账号，并幂等导入示例文章。
+在 `backend/.env` 配置 `SQLITE_PATH`、`JWT_SECRET`、`ADMIN_USERNAME` 和 `ADMIN_PASSWORD`。首次启动时会创建管理员账号，并幂等导入示例文章。
 
 ## 路由
 

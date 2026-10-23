@@ -1,5 +1,4 @@
 import type { ErrorRequestHandler, NextFunction, Request, Response } from 'express';
-import mongoose from 'mongoose';
 import { ZodError } from 'zod';
 
 export class AppError extends Error {
@@ -27,11 +26,7 @@ export const errorHandler: ErrorRequestHandler = (error, _request, response, _ne
     response.status(400).json({ error: { code: 'VALIDATION_ERROR', message: '请求参数无效', details: error.flatten() } });
     return;
   }
-  if (error instanceof mongoose.Error.ValidationError) {
-    response.status(400).json({ error: { code: 'VALIDATION_ERROR', message: '数据校验失败', details: error.errors } });
-    return;
-  }
-  if (error?.code === 11000) {
+  if (error?.code === 'SQLITE_CONSTRAINT_UNIQUE') {
     response.status(409).json({ error: { code: 'CONFLICT', message: 'slug 已存在' } });
     return;
   }

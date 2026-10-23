@@ -22,7 +22,9 @@ export const articleSchema = z.object({
 
 export const articlePatchSchema = articleSchema.partial();
 
-export const idSchema = z.string().regex(/^[a-f\d]{24}$/i, '无效的文章 ID');
+// Article IDs are persisted by SQLite. Seeded records use slug-derived IDs,
+// while newly created records use a 24-character hash, so both formats are valid.
+export const idSchema = z.string().trim().min(1).max(64).regex(/^[a-z\d-]+$/i, '无效的文章 ID');
 
 export const listQuerySchema = z.object({
   q: z.string().trim().max(100).optional(),
