@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { computed, inject, ref, watch } from 'vue';
+import { computed, inject, nextTick, ref, watch } from 'vue';
 import { ArrowLeft, ArrowRight, Clock3, Share2 } from 'lucide-vue-next';
 import { RouterLink, useRoute } from 'vue-router';
 import BlogShell from '../components/BlogShell.vue';
 import { usePreferences } from '../composables/preferences';
 import { publicApi } from '../services/api';
-import { localizeArticle } from '../services/articleLocale';
 import { renderMarkdown } from '../services/markdown';
 import type { Article } from '../types';
 
@@ -16,7 +15,9 @@ const article = ref<Article | null>(null);
 const publishedArticles = ref<Article[]>([]);
 const loading = ref(true);
 const error = ref('');
-const displayArticle = computed(() => article.value ? localizeArticle(article.value, locale.value) : null);
+const readerRoute = ref<HTMLDivElement | null>(null);
+let loadSequence = 0;
+const displayArticle = computed(() => article.value);
 const html = computed(() => displayArticle.value ? renderMarkdown(displayArticle.value.contentMarkdown) : '');
 const dateLabel = computed(() => displayArticle.value?.publishedAt
   ? new Intl.DateTimeFormat(locale.value === 'zh' ? 'zh-CN' : 'en', {
@@ -32,25 +33,36 @@ const adjacentArticles = computed(() => {
   const previous = index >= 0 ? publishedArticles.value[index + 1] : undefined;
   const next = index > 0 ? publishedArticles.value[index - 1] : undefined;
   return {
-    previous: previous ? localizeArticle(previous, locale.value) : undefined,
-    next: next ? localizeArticle(next, locale.value) : undefined,
+    previous,
+    next,
   };
 });
 
 const load = async () => {
+  const sequence = ++loadSequence;
+  const slug = String(route.params.slug);
   loading.value = true;
   error.value = '';
   try {
-    article.value = await publicApi.getArticle(String(route.params.slug));
+    const nextArticle = await publicApi.getArticle(slug);
+    if (sequence !== loadSequence) return;
+    article.value = nextArticle;
     try {
-      publishedArticles.value = await publicApi.listArticles();
+      const nextPublishedArticles = await publicApi.listArticles();
+      if (sequence !== loadSequence) return;
+      publishedArticles.value = nextPublishedArticles;
     } catch {
+      if (sequence !== loadSequence) return;
       publishedArticles.value = [];
     }
   } catch (reason) {
+    if (sequence !== loadSequence) return;
     error.value = reason instanceof Error ? reason.message : '文章加载失败';
   } finally {
+    if (sequence !== loadSequence) return;
     loading.value = false;
+    await nextTick();
+    window.requestAnimationFrame(() => readerRoute.value?.classList.add('is-visible'));
   }
 };
 watch(() => route.params.slug, () => {
@@ -83,7 +95,7 @@ const share = async () => {
       </section>
 
       <template v-else-if="displayArticle">
-        <div class="reader-route reveal">
+        <div ref="readerRoute" class="reader-route reveal">
           <RouterLink class="reader-back" to="/articles">
             <ArrowLeft :size="15" />
             <span>{{ locale === 'zh' ? '返回全部文章' : 'Back to all notes' }}</span>
@@ -124,7 +136,7 @@ const share = async () => {
           <nav class="article-pagination" :aria-label="locale === 'zh' ? '文章导航' : 'Article navigation'">
             <RouterLink
               v-if="adjacentArticles.previous"
-              class="article-pagination-link"
+              class="article-pagination-link article-pagination-previous"
               :to="`/articles/${adjacentArticles.previous.slug}`"
             >
               <span class="article-pagination-label"><ArrowLeft :size="14" />{{ locale === 'zh' ? '上一篇' : 'Previous note' }}</span>

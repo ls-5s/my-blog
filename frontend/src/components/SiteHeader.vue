@@ -160,13 +160,16 @@ onUnmounted(() => {
   >
     <div class="mobile-menu__backdrop" @click="closeMenu(true)"></div>
     <nav class="mobile-menu__inner" aria-label="移动端导航">
-      <span class="mobile-menu__index">NAV / 04</span>
+      <span class="mobile-menu__index">NAV / 05</span>
       <RouterLink
         v-for="link in links"
         :key="link.section"
         :to="link.to"
         @click="closeMenu()"
       >{{ text(link.label) }}</RouterLink>
+      <RouterLink to="/admin/login" @click="closeMenu()">
+        {{ locale === 'zh' ? '管理' : 'Admin' }}
+      </RouterLink>
       <div class="mobile-menu__footer">
         <span>CHENGDU · CN</span>
         <span>30.5728° N</span>

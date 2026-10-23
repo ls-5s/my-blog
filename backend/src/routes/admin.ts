@@ -14,12 +14,6 @@ const getArticleOrThrow = (id: string) => {
   return article;
 };
 
-const assertEnglishTranslation = (article: { titleEn?: string; summaryEn?: string; contentMarkdownEn?: string }) => {
-  if (!article.titleEn?.trim() || !article.summaryEn?.trim() || !article.contentMarkdownEn?.trim()) {
-    throw new AppError(422, 'ARTICLE_TRANSLATION_REQUIRED', '发布文章前请填写英文标题、摘要和正文');
-  }
-};
-
 adminRouter.get('/articles', async (request, response, next) => {
   try {
     const query = listQuerySchema.parse(request.query);
@@ -41,7 +35,6 @@ adminRouter.get('/articles/:id', async (request, response, next) => {
 adminRouter.post('/articles', async (request, response, next) => {
   try {
     const payload = articleSchema.parse(request.body);
-    if (payload.status === 'published') assertEnglishTranslation(payload);
     if (payload.status === 'published' && !payload.publishedAt) payload.publishedAt = new Date();
     const article = insertArticle(payload);
     response.status(201).json({ data: article });
@@ -55,7 +48,6 @@ adminRouter.patch('/articles/:id', async (request, response, next) => {
     const payload = articlePatchSchema.parse(request.body);
     if (payload.status === 'published' && !payload.publishedAt) payload.publishedAt = new Date();
     const existing = getArticleOrThrow(request.params.id);
-    if ((payload.status ?? existing.status) === 'published') assertEnglishTranslation({ ...existing, ...payload });
     const article = updateArticle(request.params.id, payload);
     if (!article) throw new AppError(404, 'ARTICLE_NOT_FOUND', '文章不存在');
     response.json({ data: article });
@@ -67,7 +59,6 @@ adminRouter.patch('/articles/:id', async (request, response, next) => {
 adminRouter.post('/articles/:id/publish', async (request, response, next) => {
   try {
     const existing = getArticleOrThrow(request.params.id);
-    assertEnglishTranslation(existing);
     const article = updateArticle(request.params.id, { status: 'published', publishedAt: existing.publishedAt ?? new Date() });
     if (!article) throw new AppError(404, 'ARTICLE_NOT_FOUND', '文章不存在');
     response.json({ data: article });

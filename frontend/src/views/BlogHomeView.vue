@@ -11,7 +11,6 @@ import { articleSearchText } from '../services/articleLocale';
 import type { Article } from '../types';
 
 const { locale, text } = usePreferences();
-const showToast = inject<(message: string) => void>('showToast', () => undefined);
 const bootReady = inject<Readonly<Ref<boolean>>>('bootReady', ref(true));
 const articles = ref<Article[]>([]);
 const loading = ref(true);
@@ -49,23 +48,6 @@ const chooseCategory = (id: string) => {
 const clearFilters = () => {
   query.value = '';
   filter.value = 'all';
-};
-const copyEmail = async () => {
-  try {
-    await navigator.clipboard.writeText(profile.email);
-    showToast(locale.value === 'zh' ? '邮箱已复制' : 'Email copied');
-  } catch {
-    showToast(locale.value === 'zh' ? '复制失败，请手动选择邮箱' : 'Copy failed. Please select the email manually.');
-  }
-};
-
-const copyValue = async (value: string) => {
-  try {
-    await navigator.clipboard.writeText(value);
-    showToast(locale.value === 'zh' ? '已复制到剪贴板' : 'Copied to clipboard');
-  } catch {
-    showToast(locale.value === 'zh' ? '复制失败，请手动选择内容' : 'Copy failed. Please select the text manually.');
-  }
 };
 
 const waitForBoot = () => {
@@ -394,30 +376,17 @@ onMounted(async () => {
           <p class="eyebrow">06 / GET IN TOUCH</p>
           <h2 id="contact-title" tabindex="-1">{{ locale === 'zh' ? '有合适的前端机会，欢迎聊聊。' : 'Have a frontend role in mind? Let’s talk.' }}</h2>
           <p>{{ locale === 'zh' ? '如果你正在寻找熟悉 Vue 3、TypeScript 与 AI 应用开发的前端伙伴，或者想交流工程实践，欢迎来信。' : 'If you are looking for a frontend developer with Vue 3, TypeScript, and applied AI experience—or want to compare notes on engineering practice—my inbox is open.' }}</p>
-          <div class="contact-panel__actions">
-            <a class="button button--primary" :href="`mailto:${profile.email}`">
-              <span>{{ locale === 'zh' ? '发送邮件' : 'Send an email' }}</span>
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" /></svg>
-            </a>
-            <button class="button button--ghost" type="button" @click="copyEmail">
-              <span>{{ locale === 'zh' ? '复制邮箱' : 'Copy email' }}</span>
-            </button>
-          </div>
           <div class="contact-list">
-            <component
-              :is="contact.action === 'link' ? 'a' : contact.action === 'copy' ? 'button' : 'div'"
+            <a
               v-for="contact in contacts"
               :key="contact.id"
-              class="contact-list__item"
-              :type="contact.action === 'copy' ? 'button' : undefined"
-              :href="contact.action === 'link' ? contact.href : undefined"
+              :class="`contact-list__item contact-list__item--${contact.id}`"
+              :href="contact.href"
               :target="contact.action === 'link' && contact.external ? '_blank' : undefined"
-              :rel="contact.action === 'link' && contact.external ? 'noreferrer' : undefined"
-              @click="contact.action === 'copy' ? copyValue(typeof contact.value === 'string' ? contact.value : text(contact.value)) : undefined"
+              :rel="contact.action === 'link' && contact.external ? 'noopener noreferrer' : undefined"
             >
               <span>{{ text(contact.label) }}</span>
-              <strong>{{ typeof contact.value === 'string' ? contact.value : text(contact.value) }}</strong>
-            </component>
+            </a>
           </div>
         </div>
       </section>

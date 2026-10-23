@@ -2,7 +2,6 @@
 import { computed } from 'vue';
 import { usePreferences } from '../composables/preferences';
 import { categories } from '../data/site';
-import { localizeArticle } from '../services/articleLocale';
 import type { Article } from '../types';
 
 const props = withDefaults(defineProps<{
@@ -14,7 +13,6 @@ const props = withDefaults(defineProps<{
   index: 0,
 });
 const { locale, text } = usePreferences();
-const localizedArticle = computed(() => localizeArticle(props.article, locale.value));
 const category = computed(() => categories.find((item) => item.id === props.article.category));
 const dateLabel = (value?: string) => value
   ? new Intl.DateTimeFormat(locale.value === 'zh' ? 'zh-CN' : 'en-US', {
@@ -33,12 +31,12 @@ const dateLabel = (value?: string) => value
   >
     <div class="note-card__top">
       <span class="note-card__index">{{ String(index + 1).padStart(2, '0') }} / ORBIT</span>
-      <span>{{ dateLabel(article.publishedAt) }} · {{ article.readTime ?? Math.max(1, Math.ceil(localizedArticle.contentMarkdown.length / 500)) }} {{ locale === 'zh' ? '分钟' : 'min' }}</span>
+      <span>{{ dateLabel(article.publishedAt) }} · {{ article.readTime ?? Math.max(1, Math.ceil(article.contentMarkdown.length / 500)) }} {{ locale === 'zh' ? '分钟' : 'min' }}</span>
     </div>
     <div class="note-card__body">
       <span class="note-card__category">{{ category ? text(category.label) : article.category }}</span>
-      <h3>{{ localizedArticle.title }}</h3>
-      <p class="note-card__excerpt">{{ localizedArticle.summary }}</p>
+      <h3>{{ article.title }}</h3>
+      <p class="note-card__excerpt">{{ article.summary }}</p>
     </div>
     <div class="note-card__footer">
       <ul class="tag-list">

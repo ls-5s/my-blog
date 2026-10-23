@@ -14,6 +14,7 @@ if (!browserCandidates.length) {
 
 const profile = mkdtempSync(join(tmpdir(), 'orbit-notes-locale-'));
 const port = 9333;
+const baseUrl = process.env.VITE_TEST_URL ?? 'http://localhost:5173';
 const browser = spawn(browserCandidates[0], [
   '--headless=new',
   '--disable-gpu',
@@ -82,17 +83,17 @@ try {
   await client.send('Page.enable');
   await client.send('Runtime.enable');
 
-  await client.send('Page.navigate', { url: 'http://localhost:5173/' });
+  await client.send('Page.navigate', { url: `${baseUrl}/` });
   await delay(1_500);
   await client.send('Runtime.evaluate', {
     expression: "localStorage.setItem('orbit-notes-locale', 'zh')",
   });
 
   await client.send('Page.navigate', {
-    url: 'http://localhost:5173/articles/virtual-task-list',
+    url: `${baseUrl}/articles/virtual-task-list`,
   });
 
-  const expectedTitle = 'From 20fps to 50fps: Rebuilding a 300+ Task List';
+  const expectedTitle = '从 20fps 到 50fps：重构 300+ 条任务列表';
   const readPage = async () => {
     const result = await client.send('Runtime.evaluate', {
       expression: `(() => {
@@ -112,25 +113,23 @@ try {
   };
 
   const chinesePage = await waitFor(readPage);
-  if (chinesePage.title === expectedTitle) throw new Error('The article did not start in Chinese.');
+  if (chinesePage.title !== expectedTitle) throw new Error('The article title is not Chinese before switching the site locale.');
   await client.send('Runtime.evaluate', {
     expression: "document.querySelector('.language-button')?.click()",
   });
   const page = await waitFor(async () => {
     const current = await readPage();
-    return current?.title === expectedTitle ? current : null;
+    return current?.lang === 'en' ? current : null;
   });
 
   const failures = [];
   if (page.lang !== 'en') failures.push(`document language is "${page.lang}"`);
-  if (page.title !== expectedTitle) failures.push(`title is "${page.title}"`);
-  if (/[\u3400-\u9fff]/u.test(page.summary)) failures.push('summary still contains Chinese');
-  if (/[\u3400-\u9fff]/u.test(page.body)) failures.push('article body still contains Chinese');
-  if (!page.headings.includes('Reduce the work happening at once')) {
-    failures.push('English article heading is missing');
-  }
+  if (page.title !== expectedTitle) failures.push(`article title changed to "${page.title}"`);
+  if (!/[\u3400-\u9fff]/u.test(page.summary)) failures.push('Chinese article summary was translated or removed');
+  if (!/[\u3400-\u9fff]/u.test(page.body)) failures.push('Chinese article body was translated or removed');
+  if (!page.headings.some((heading) => /[\u3400-\u9fff]/u.test(heading))) failures.push('Chinese article headings are missing');
 
-  await client.send('Page.navigate', { url: 'http://localhost:5173/articles' });
+  await client.send('Page.navigate', { url: `${baseUrl}/articles` });
   const cardTitles = await waitFor(async () => {
     const result = await client.send('Runtime.evaluate', {
       expression: `(() => {
@@ -141,16 +140,13 @@ try {
     });
     return result.result.value;
   });
-  if (!cardTitles.includes(expectedTitle)) failures.push('English article card title is missing');
-  if (cardTitles.some((title) => /[\u3400-\u9fff]/u.test(title))) {
-    failures.push('article list still contains Chinese titles');
-  }
+  if (!cardTitles.includes(expectedTitle)) failures.push('Chinese article card title is missing after switching the site locale');
 
   if (failures.length) {
-    throw new Error(`English article check failed:\n- ${failures.join('\n- ')}`);
+    throw new Error(`Article locale check failed:\n- ${failures.join('\n- ')}`);
   }
 
-  console.log('English article check passed.');
+  console.log('Article content remains Chinese when the site interface locale changes.');
 } finally {
   client?.close();
   if (browser.exitCode === null) {

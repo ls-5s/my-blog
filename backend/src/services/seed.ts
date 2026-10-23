@@ -1,19 +1,17 @@
 import { seedArticles } from '../data/seedArticles.js';
-import { countArticles, getArticleBySlug, insertArticle, updateArticle } from './database.js';
+import { getArticleBySlug, insertArticle, updateArticle } from './database.js';
 
-/** Seed an empty collection and backfill English fields without replacing existing content. */
+/** Add missing sample articles and backfill English fields without replacing edited content. */
 export const ensureSeedArticles = async (): Promise<void> => {
-  const articleCount = countArticles();
-  if (articleCount === 0) {
-    for (const article of seedArticles) insertArticle(article);
-    console.log(`Seeded ${seedArticles.length} sample articles`);
-    return;
-  }
-
+  let seeded = 0;
   let translated = 0;
   for (const seed of seedArticles) {
     const existing = getArticleBySlug(seed.slug);
-    if (!existing) continue;
+    if (!existing) {
+      insertArticle(seed);
+      seeded += 1;
+      continue;
+    }
     const isUnmodifiedSeed = existing.title === seed.title
       && existing.summary === seed.summary
       && existing.contentMarkdown === seed.contentMarkdown;
@@ -27,5 +25,6 @@ export const ensureSeedArticles = async (): Promise<void> => {
       translated += 1;
     }
   }
+  if (seeded) console.log(`Seeded ${seeded} sample articles`);
   if (translated) console.log(`Backfilled English content for ${translated} sample articles`);
 };
