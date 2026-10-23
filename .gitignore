@@ -1,5 +1,7 @@
 node_modules/
 **/node_modules/
+.vercel/
+**/.vercel/
 dist/
 **/dist/
 coverage/
@@ -10,3 +12,6 @@ coverage/
 backend/data/*.sqlite*
 *.log
 npm-debug.log*
+
+.vercel
+.env*.local

@@ -15,7 +15,7 @@ type TokenPayload = JwtPayload & AuthenticatedAdmin;
 const cookieOptions = {
   httpOnly: true,
   secure: config.isProduction,
-  sameSite: 'lax' as const,
+  sameSite: config.isProduction ? 'none' as const : 'lax' as const,
   path: '/',
   maxAge: config.authCookieMaxAgeMs,
 };

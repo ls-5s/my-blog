@@ -43,13 +43,12 @@ npm run build
 
 ## Vercel 部署
 
-根目录的 `vercel.json` 将 `frontend/dist` 作为静态站点，并将 `/api/*` 转发给 `api/index.ts` 中的 Express 函数。Vercel 项目使用仓库根目录，并在生产环境配置以下变量：
+前后端使用两个独立的 Vercel 项目：
 
-- `TURSO_DATABASE_URL`、`TURSO_AUTH_TOKEN`：托管数据库连接信息
-- `JWT_SECRET`：足够长的随机字符串
-- `ADMIN_USERNAME`、`ADMIN_PASSWORD`：初始管理员凭据
-- `FRONTEND_ORIGIN`：站点完整地址，例如 `https://your-project.vercel.app`
-- `VITE_API_BASE`：前后端同域时设为 `/api`
+- 后端项目：根目录设为 `backend`，框架选择 Express。
+- 前端项目：根目录设为 `frontend`，框架选择 Vite，输出目录为 `dist`。
 
-运行 `npm run build` 后，前端产物位于 `frontend/dist`。`api/index.ts` 复用后端 `backend/src/app.ts` 的默认 handler，使本地 Express 与 Vercel Serverless 使用同一套路由和初始化逻辑。
+后端生产环境需要配置 `TURSO_DATABASE_URL`、`TURSO_AUTH_TOKEN`、`JWT_SECRET`、`ADMIN_USERNAME`、`ADMIN_PASSWORD` 和 `FRONTEND_ORIGIN`。其中 `FRONTEND_ORIGIN` 必须是前端部署的完整地址。
+
+前端生产环境需要配置 `VITE_API_BASE`，值为后端地址加 `/api`，例如 `https://your-backend.vercel.app/api`。该变量会在构建时写入前端代码，修改后需要重新部署前端。
 
