@@ -1,24 +1,44 @@
-# 星轨手记 / Orbit Notes
+# Orbit Notes 全栈博客
 
-一个使用原生 HTML、CSS、JavaScript 和 Three.js 构建的双语个人博客。
+这是“星轨手记”的 Vue 3 全栈版本：公开访客可以阅读博客文章，管理员登录后可以使用 Markdown 编辑器管理文章。
+
+## 目录
+
+- `frontend/`：Vue 3、Vite、TypeScript、Vue Router、Pinia
+- `backend/`：Node.js、Express、TypeScript、Mongoose、MongoDB
+- 根目录原有的 `index.html`、`styles.css` 和 `js/`：原生版本，作为迁移参考并保留
 
 ## 本地运行
 
-Three.js 通过 ES Module 从 CDN 加载，因此需要使用静态服务器：
+准备 Node.js 20+ 和 MongoDB，然后分别安装依赖：
 
 ```powershell
-python -m http.server 4173
+npm install
+Copy-Item backend/.env.example backend/.env
+npm run dev:backend
+npm run dev:frontend
 ```
 
-然后打开 <http://127.0.0.1:4173>。
+前端默认地址为 `http://localhost:5173`，后端默认为 `http://localhost:4000`。
 
-## 功能
+在 `backend/.env` 配置 `MONGODB_URI`、`JWT_SECRET`、`ADMIN_USERNAME` 和 `ADMIN_PASSWORD`。服务首次连接数据库时会创建管理员账号，并幂等导入示例文章。
 
-- Three.js 晶体、轨道环、粒子星云与 Bloom 辉光
-- 中英双语切换和深浅主题切换，选择自动保存
-- 四篇完整双语文章、分类筛选与标题/标签搜索
-- 四个可展开项目案例、技能图谱和成长时间线
-- 桌面与移动端响应式布局、键盘操作和减少动态效果模式
-- CDN 或 WebGL 不可用时自动启用 CSS 星云降级
+## 路由
 
-内容集中在 `js/data.js`，页面交互位于 `js/app.js`，Three.js 场景位于 `js/scene.js`。
+- `/`：公开博客首页
+- `/articles`：文章检索与分类筛选
+- `/articles/:slug`：Markdown 文章阅读页
+- `/admin/login`：管理员登录
+- `/admin/articles`：后台文章列表
+- `/admin/articles/new`：新建文章
+- `/admin/articles/:id/edit`：编辑文章
+
+公开接口只返回已发布文章。后台所有写操作都由后端 JWT Cookie 和管理员角色校验保护；前端路由守卫只用于导航体验。
+
+## 检查
+
+```powershell
+npm run typecheck
+npm run build
+```
+
