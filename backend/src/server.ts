@@ -1,13 +1,9 @@
-import { app } from './app.js';
+import { app, initializeApplication } from './app.js';
 import { config } from './config.js';
-import { ensureInitialAdmin } from './services/auth.js';
-import { ensureSeedArticles } from './services/seed.js';
-import { closeDatabase, initializeDatabase } from './services/database.turso.js';
+import { closeDatabase } from './services/database.turso.js';
 
 const start = async (): Promise<void> => {
-  await initializeDatabase();
-  await ensureInitialAdmin();
-  await ensureSeedArticles();
+  await initializeApplication();
   const server = app.listen(config.port, () => {
     console.log(`Backend listening on http://localhost:${config.port}`);
   });

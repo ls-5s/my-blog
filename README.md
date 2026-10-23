@@ -41,3 +41,15 @@ npm run typecheck
 npm run build
 ```
 
+## Vercel 部署
+
+后端的 `backend/src/app.ts` 同时提供本地 Express 实例和 Vercel 默认函数导出。Vercel 项目使用仓库根目录，并在生产环境配置以下变量：
+
+- `TURSO_DATABASE_URL`、`TURSO_AUTH_TOKEN`：托管数据库连接信息
+- `JWT_SECRET`：足够长的随机字符串
+- `ADMIN_USERNAME`、`ADMIN_PASSWORD`：初始管理员凭据
+- `FRONTEND_ORIGIN`：站点完整地址，例如 `https://your-project.vercel.app`
+- `VITE_API_BASE`：前后端同域时设为 `/api`
+
+运行 `npm run build` 后，前端产物位于 `frontend/dist`，后端 Serverless 入口为 `backend/src/app.ts`。
+
