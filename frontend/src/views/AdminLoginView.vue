@@ -24,7 +24,7 @@ const submit = async () => {
   <main class="login-page">
     <div class="login-ambient" aria-hidden="true"><span></span><i></i></div>
     <section class="login-panel" aria-labelledby="login-title">
-      <RouterLink to="/" class="admin-brand"><span class="brand-mark">LC</span><span><strong>ORBIT NOTES</strong><small>CONTENT STUDIO</small></span></RouterLink>
+      <RouterLink to="/" class="admin-brand"><span class="brand__mark">LY</span><span><strong>LY</strong><small>CONTENT STUDIO</small></span></RouterLink>
       <div class="login-copy">
         <p class="eyebrow">ADMIN / AUTHENTICATION</p>
         <h1 id="login-title">进入文章控制台<span>.</span></h1>
@@ -39,7 +39,7 @@ const submit = async () => {
           </div>
         </label>
         <p v-if="error" class="form-error" role="alert">{{ error }}</p>
-        <button class="button button-primary login-button" type="submit" :disabled="session.busy"><span>{{ session.busy ? '验证中…' : '登录管理后台' }}</span><ArrowRight :size="17" /></button>
+        <button class="button button--primary login-button" type="submit" :disabled="session.busy"><span>{{ session.busy ? '验证中…' : '登录管理后台' }}</span><ArrowRight :size="17" /></button>
       </form>
       <div class="login-foot"><span><LockKeyhole :size="14" /> HTTP-only session</span><span><KeyRound :size="14" /> Markdown workflow</span></div>
     </section>

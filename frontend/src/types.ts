@@ -6,9 +6,12 @@ export type Localized = { zh: string; en: string };
 export interface Article {
   _id: string;
   title: string;
+  titleEn?: string;
   slug: string;
   summary: string;
+  summaryEn?: string;
   contentMarkdown: string;
+  contentMarkdownEn?: string;
   category: string;
   tags: string[];
   coverUrl?: string;
@@ -22,9 +25,12 @@ export interface Article {
 
 export interface ArticlePayload {
   title: string;
+  titleEn?: string;
   slug: string;
   summary: string;
+  summaryEn?: string;
   contentMarkdown: string;
+  contentMarkdownEn?: string;
   category: string;
   tags: string[];
   coverUrl?: string;

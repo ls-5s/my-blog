@@ -13,6 +13,7 @@ const locale = ref<Locale>(initialLocale());
 
 watch(theme, (value) => {
   document.documentElement.dataset.theme = value;
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', value === 'dark' ? '#05070d' : '#edf4f7');
   try { localStorage.setItem('orbit-notes-theme', value); } catch { /* storage can be disabled */ }
 }, { immediate: true });
 watch(locale, (value) => {

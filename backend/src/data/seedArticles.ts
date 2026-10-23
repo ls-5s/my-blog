@@ -2,9 +2,12 @@ import type { ArticleStatus } from '../models/Article.js';
 
 export type SeedArticle = {
   title: string;
+  titleEn: string;
   slug: string;
   summary: string;
+  summaryEn: string;
   contentMarkdown: string;
+  contentMarkdownEn: string;
   category: string;
   tags: string[];
   coverUrl?: string;
@@ -19,43 +22,55 @@ const seed = (input: Omit<SeedArticle, 'publishedAt'> & { publishedAt: string })
 
 export const seedArticles: SeedArticle[] = [
   seed({
-    title: '让 3D 发光，但不让浏览器尖叫',
-    slug: 'light-without-noise',
-    summary: '一次关于粒子、Bloom 和移动端性能预算的复盘：炫酷不等于把每一个像素都点亮。',
-    category: 'webgl',
-    tags: ['Three.js', 'Performance', 'Motion'],
+    title: '从 20fps 到 50fps：重构 300+ 条任务列表',
+    titleEn: 'From 20fps to 50fps: Rebuilding a 300+ Task List',
+    slug: 'virtual-task-list',
+    summary: '复盘 IMAS Studio 长列表性能优化：虚拟滚动、图片懒加载与渲染边界如何协同生效。',
+    summaryEn: "A retrospective on optimizing IMAS Studio's long task list with virtual scrolling, lazy images, and tighter rendering boundaries.",
+    category: 'engineering',
+    tags: ['Nuxt', 'Virtual list', 'Performance'],
     status: 'published',
     publishedAt: '2026-09-18T00:00:00.000Z',
-    contentMarkdown: `## 先决定哪里应该安静\n\n第一次做实时 3D 页面时，我总想把更多粒子、更多光晕和更多运动塞进视野。真正开始测试后才发现，观众感受到的不是元素数量，而是视觉焦点是否清楚。星云的价值来自中心的晶体，而不是背景里每一颗都在抢注意力的星。\n\n因此我把场景分成三层：核心负责叙事，轨道负责方向感，星尘只提供深度。正文出现时，核心主动降低亮度和运动幅度，让界面从主角变成环境。\n\n## 像素预算比帧率更早耗尽\n\n在移动端，最昂贵的往往不是几何体，而是大面积透明叠加与后处理。Bloom 很迷人，但它的成本与分辨率直接相关。桌面保留完整辉光，中低宽度视口使用更小的粒子贴图、降低设备像素比，并把部分光晕交给 CSS 径向渐变完成。\n\n## 把性能做成可见的体验\n\n最终目标不是让开发者炫耀自己会写 GLSL，而是让访问者感觉页面愿意回应。指针移动时的轻微滞后、滚动时场景的缓慢退场、文章打开时背景的收敛，这些细节都在告诉人：你知道我正在做什么。`,
+    contentMarkdown: `## 先减少同时存在的工作\n\nIMAS Studio 的任务列表包含 300 多条卡片，每张卡片又带有缩略图、状态标签和操作按钮。最初一次性渲染全部 DOM，让滚动明显掉帧。\n\n我引入虚拟滚动，只保留视口附近的卡片，再用图片懒加载延后非首屏资源。列表交互需要的数据保持独立，避免滚动时触发整棵组件树更新。\n\n## 用真实场景验证\n\n优化效果以长列表滚动、图片加载和筛选切换三类场景为准，最终帧率从 20fps 提升到 50fps 以上，同时保留了卡片交互与可访问操作。`,
+    contentMarkdownEn: `## Reduce the work happening at once\n\nIMAS Studio's task list contains more than 300 cards, each with a thumbnail, status labels, and action buttons. Rendering every DOM node at once made scrolling visibly drop frames.\n\nI introduced virtual scrolling to keep only cards near the viewport, then used lazy image loading to defer off-screen assets. The data used by list interactions is kept separate so scrolling does not update the entire component tree.\n\n## Validate against real workflows\n\nI measured performance across long-list scrolling, image loading, and filter changes. The final frame rate rose from 20fps to more than 50fps while preserving card interactions and accessible controls.`,
   }),
   seed({
-    title: '动效不是装饰，是界面的语法',
-    slug: 'motion-is-grammar',
-    summary: '为什么好的动效会让操作看起来有因果，而不只是让页面看起来会动。',
-    category: 'motion',
-    tags: ['Interaction', 'CSS', 'Rhythm'],
+    title: '把自然语言交给 Agent 之前，先约束 SQL',
+    titleEn: 'Constrain SQL Before Giving Natural Language to an Agent',
+    slug: 'sql-safety-pipeline',
+    summary: 'Chain-NL2SQL 如何通过意图判断、只读执行、AST 校验与结果复核组成可追踪的安全链路。',
+    summaryEn: 'How Chain-NL2SQL combines intent checks, read-only execution, AST validation, and result review into a traceable safety pipeline.',
+    category: 'ai',
+    tags: ['LangGraph', 'RAG', 'SQL safety'],
     status: 'published',
     publishedAt: '2026-08-02T00:00:00.000Z',
-    contentMarkdown: `## 每个动作都需要一个理由\n\n如果一个动效只能被描述为“飞进来”，它通常还不够具体。好的动效回答的是：元素从哪里来、为什么现在出现、它和谁发生了关系，以及用户接下来应该看哪里。\n\n在我的博客里，卡片倾斜不是为了让鼠标显得聪明，而是为了让平面拥有厚度。详情层从卡片位置扩展，也不是炫技，而是帮助用户保留空间记忆。\n\n## 节奏比曲线更重要\n\n很多动效看起来廉价，并不是因为缓动函数不对，而是因为所有元素同时出发、同时结束。我会把信息拆成主、次和背景三个节奏：标题先建立方向，内容随后抵达，环境最后轻轻跟随。\n\n## 为减少动态效果留出另一条路\n\n动效系统必须从第一天就考虑前庭敏感和注意力差异。减少动态并不是删掉所有状态，而是用淡入、颜色变化和即时位移表达同样的因果关系。`,
+    contentMarkdown: `## 多个 Agent，各做一件明确的事\n\n自然语言数据查询降低了分析门槛，也让权限边界变得更难处理。生成 SQL 只是其中一步，真正需要设计的是从提问到结果返回的整条安全链路。\n\n先判断问题是否属于数据查询，再进入授权 Schema 检索、SQL 生成、sqlglot 语法校验、只读执行和结果复核。任何一步失败都返回可解释的状态，而不是静默重试。\n\n## 安全约束必须可验证\n\n只读数据库账号、单条查询限制、超时与行数上限共同限制执行风险。授权 Schema 和字段级脱敏则负责控制模型能看到什么。`,
+    contentMarkdownEn: `## Give each agent one clear responsibility\n\nNatural-language data queries lower the barrier to analysis while making permission boundaries harder to enforce. SQL generation is only one step; the real design problem is the full safety path from question to result.\n\nFirst determine whether the request is a data query, then move through authorized schema retrieval, SQL generation, sqlglot syntax validation, read-only execution, and result review. Any failure returns an explainable state instead of retrying silently.\n\n## Safety constraints must be verifiable\n\nA read-only database account, single-query limits, timeouts, and row caps jointly reduce execution risk. Authorized schemas and field-level redaction control what the model can see.`,
   }),
   seed({
-    title: '用 CSS 建立真正的空间层级',
-    slug: 'css-depth',
-    summary: '玻璃、阴影和透视只有服务于阅读顺序时，才会让界面显得有纵深。',
-    category: 'craft',
-    tags: ['CSS', 'Depth', 'Design systems'],
+    title: '让公共组件真正服务多个业务页面',
+    titleEn: 'Make Shared Components Serve Multiple Product Pages',
+    slug: 'reusable-business-components',
+    summary: '燃气巡检平台组件复用复盘：如何用配置、插槽和回调控制差异，而不是让组件无限膨胀。',
+    summaryEn: 'A retrospective on reusing components for a gas inspection platform with configuration, slots, and callbacks instead of letting one component grow without limits.',
+    category: 'vue',
+    tags: ['Vue 3', 'TypeScript', 'Components'],
     status: 'published',
     publishedAt: '2026-06-24T00:00:00.000Z',
-    contentMarkdown: `## 先有层级，再有玻璃\n\n透明度不会自动创造空间。如果前后层没有清晰的内容职责，玻璃只会让文字更难读。我的顺序是先确定信息层、操作层和环境层，再给它们不同的明度、模糊程度与运动权限。\n\n在这个页面中，导航是最靠前的操作层，卡片是可触摸的信息层，星云和纹理是环境层。环境层可以慢，信息层需要稳定，操作层必须即时响应。\n\n## 阴影描述关系，不描述重量\n\n大而黑的阴影常常让界面显得沉重。更有效的办法是用光源方向、环境色溢出和极细的描边共同描述距离。悬停时的阴影应该更像光从卡片下方穿过，而不是卡片突然重了一倍。\n\n## 透视必须保护文字\n\n任何 3D 变换都不能牺牲可读性。卡片倾斜时，我会把文本放在更浅的变换层，并把最大角度控制在几度以内；移动端直接移除倾斜，改用按压缩放和高光位置表达反馈。`,
+    contentMarkdown: `## 配置负责字段，插槽负责结构\n\n公共组件最常见的失败方式，是把所有页面差异都塞进 boolean 参数。燃气安全巡检平台需要同时覆盖计划、工单、安检、隐患和审核流程，我先区分稳定结构与可变业务。\n\n查询筛选、状态操作和详情抽屉在多个页面重复出现。配置负责字段和选项，插槽负责特殊信息，回调只暴露业务动作。\n\n## 复用数量不是唯一指标\n\n最终 8 个公共组件服务了 20+ 个页面。更重要的是页面新增时只需补字段与配置，业务标签、样式和执行动作仍然保持一致。`,
+    contentMarkdownEn: `## Configuration owns fields; slots own structure\n\nThe most common failure with shared components is to force every page difference into a boolean prop. The gas inspection platform needs plans, work orders, inspections, hazards, and review flows, so I first separated stable structure from business variation.\n\nSearch filters, status actions, and detail drawers appeared on many pages. Configuration owns fields and options, slots own special content, and callbacks expose business actions.\n\n## Reuse count is not the only metric\n\nEight shared components ultimately served more than 20 pages. More importantly, new pages only needed fields and configuration while business labels, styles, and execution actions remained consistent.`,
   }),
   seed({
-    title: '为慢速浏览器设计，而不是为演示机',
-    slug: 'slow-browser',
-    summary: '真正可靠的创意前端，需要在网络变慢、设备变热之后仍然保住叙事。',
-    category: 'craft',
-    tags: ['Performance', 'Progressive enhancement', 'Access'],
+    title: '给 LLM 输出加三层保险',
+    titleEn: 'Three Layers of Protection for LLM Output',
+    slug: 'stable-ai-extraction',
+    summary: 'ResumeIQ 如何用正则、JSON 解析与兜底策略处理简历信息提取的不稳定性。',
+    summaryEn: 'How ResumeIQ uses regular expressions, JSON parsing, and fallback strategies to handle unstable resume extraction.',
+    category: 'ai',
+    tags: ['LLM', 'Prompt', 'Validation'],
     status: 'published',
     publishedAt: '2026-04-11T00:00:00.000Z',
-    contentMarkdown: `## 先交付内容，再交付奇观\n\n演示视频中的页面永远拥有最好的设备和网络。真实用户没有。因此我把所有核心信息做成普通 HTML，让 Three.js 成为增强层。即使 WebGL 被禁用，标题、项目、文章和联系方式依然完整可读。\n\n这不是保守，而是让创意有更长的寿命。奇观会随着设备变旧而消失，清晰的结构会一直工作。\n\n## 降级不等于平凡\n\nCSS 同样可以表达空间：渐变光场、透视网格、错位文字和精准的阴影都能建立纵深。3D 失败时，页面不应该像被拔掉电池，而应该像换了一种观看角度。\n\n## 测量用户能感受到的东西\n\n我只关注三个指标：首次内容出现要快、交互开始后不能卡、滚动过程中不能出现突然的大面积重绘。它们比一个漂亮的总分更接近真实体验。`,
+    contentMarkdown: `## 第一层先处理确定的信息\n\n招聘筛选场景不能把模型偶尔输出错当成可接受误差。ResumeIQ 需要把非结构化的 PDF/DOCX 简历稳定转换为姓名、邮箱、电话等字段。\n\n正则适合邮箱、电话和格式清晰的文本。只有模型擅长的字段才交给 LLM，避免把所有解析压力都放在生成阶段。\n\n## 第二层约束输出，第三层负责失败\n\nJSON 解析负责验证结构，字段校验负责拒绝空值和不合理格式，兜底策略则保证页面仍能展示原文与人工修正入口。三层机制让自动化流程可用，也让失败保持透明。`,
+    contentMarkdownEn: `## Handle deterministic information first\n\nA recruiting workflow cannot treat occasional model output errors as acceptable variance. ResumeIQ needs to convert unstructured PDF and DOCX resumes into fields such as name, email, and phone reliably.\n\nRegular expressions work well for emails, phone numbers, and clearly formatted text. Only fields where the model adds value go to the LLM, avoiding unnecessary pressure on generation.\n\n## Constrain the output, then handle failure\n\nJSON parsing validates structure, field validation rejects empty values and malformed data, and fallback behavior keeps the original document and a manual correction path visible. These three layers make automation usable without hiding failures.`,
   }),
 ];

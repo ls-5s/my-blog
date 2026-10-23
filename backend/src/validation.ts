@@ -10,9 +10,12 @@ export const loginSchema = z.object({
 
 export const articleSchema = z.object({
   title: z.string().trim().min(1).max(180),
+  titleEn: z.string().trim().max(180).optional(),
   slug: z.string().trim().min(1).max(200).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'slug 只能包含小写字母、数字和连字符'),
   summary: z.string().trim().min(1).max(500),
+  summaryEn: z.string().trim().max(500).optional(),
   contentMarkdown: z.string().min(1),
+  contentMarkdownEn: z.string().optional(),
   category: z.string().trim().min(1).max(80),
   tags: z.array(z.string().trim().min(1).max(40)).max(30).default([]),
   coverUrl: optionalUrl,

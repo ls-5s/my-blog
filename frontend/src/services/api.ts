@@ -1,4 +1,5 @@
 import { fallbackArticles } from '../data/site';
+import { articleSearchText } from './articleLocale';
 import type { AdminUser, ApiErrorShape, Article, ArticlePayload, ArticleStatus } from '../types';
 
 const API_BASE = (import.meta.env.VITE_API_BASE ?? 'http://localhost:4000/api').replace(/\/$/, '');
@@ -58,7 +59,7 @@ export const publicApi = {
       const query = filters.q?.toLowerCase() ?? '';
       return fallbackArticles.filter((article) => {
         const categoryMatch = !filters.category || filters.category === 'all' || article.category === filters.category;
-        const queryMatch = !query || `${article.title} ${article.summary} ${article.tags.join(' ')}`.toLowerCase().includes(query);
+        const queryMatch = !query || articleSearchText(article).toLowerCase().includes(query);
         return categoryMatch && queryMatch;
       });
     }

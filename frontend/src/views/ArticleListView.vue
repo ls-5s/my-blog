@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
-import { Search, SlidersHorizontal, X } from 'lucide-vue-next';
+import { useRoute, useRouter } from 'vue-router';
 import BlogShell from '../components/BlogShell.vue';
 import ArticleCard from '../components/ArticleCard.vue';
 import { usePreferences } from '../composables/preferences';
 import { categories } from '../data/site';
 import { publicApi } from '../services/api';
 import type { Article } from '../types';
-import { useRoute, useRouter } from 'vue-router';
 
 const { locale, text } = usePreferences();
 const route = useRoute();
@@ -19,31 +18,110 @@ const loading = ref(true);
 const error = ref('');
 let filterTimer = 0;
 
+const count = computed(() => articles.value.length);
 const load = async () => {
-  loading.value = true; error.value = '';
-  try { articles.value = await publicApi.listArticles({ q: search.value, category: category.value }); } catch (e) { error.value = e instanceof Error ? e.message : '加载失败'; } finally { loading.value = false; }
+  loading.value = true;
+  error.value = '';
+  try {
+    articles.value = await publicApi.listArticles({
+      q: search.value,
+      category: category.value,
+    });
+  } catch (reason) {
+    error.value = reason instanceof Error ? reason.message : '加载失败';
+  } finally {
+    loading.value = false;
+  }
 };
-const filteredCount = computed(() => articles.value.length);
-watch([search, category], () => { window.clearTimeout(filterTimer); filterTimer = window.setTimeout(() => { void load(); }, 220); });
+
+watch([search, category], () => {
+  window.clearTimeout(filterTimer);
+  filterTimer = window.setTimeout(() => {
+    void load();
+  }, 220);
+});
 watch(() => route.query.category, (value) => {
   category.value = typeof value === 'string' ? value : 'all';
 });
-onMounted(() => { void load(); });
-const pickCategory = (value: string) => { category.value = value; void router.replace({ query: value === 'all' ? {} : { category: value } }); };
-const reset = () => { search.value = ''; pickCategory('all'); };
+
+onMounted(() => {
+  void load();
+});
+
+const pickCategory = (value: string) => {
+  category.value = value;
+  void router.replace({ query: value === 'all' ? {} : { category: value } });
+};
+const reset = () => {
+  search.value = '';
+  pickCategory('all');
+};
 </script>
 
 <template>
   <BlogShell>
-    <main id="main" class="archive-page container">
-      <section class="page-intro"><p class="eyebrow">02 / {{ locale === 'zh' ? '全部文章' : 'ALL ARTICLES' }}</p><h1>{{ locale === 'zh' ? '一些值得展开的想法。' : 'Ideas worth unfolding.' }}</h1><p>{{ locale === 'zh' ? '从实时图形到交互细节，记录每一次判断背后的原因。先选择方向，再打开一篇慢慢读。' : 'From realtime graphics to interaction detail, these notes uncover the reasoning behind each decision.' }}</p></section>
-      <section class="archive-toolbar" aria-label="文章筛选"><label class="search-field"><Search :size="17" /><input v-model="search" type="search" :placeholder="locale === 'zh' ? '搜索标题、摘要或标签…' : 'Search title, summary or tag…'" :aria-label="locale === 'zh' ? '搜索文章' : 'Search articles'" /></label><div class="filter-label"><SlidersHorizontal :size="15" /> FILTER / {{ filteredCount.toString().padStart(2, '0') }}</div></section>
-      <div class="filter-list" role="group" :aria-label="locale === 'zh' ? '文章分类' : 'Article categories'"><button v-for="item in categories" :key="item.id" type="button" :class="{ active: category === item.id }" @click="pickCategory(item.id)"><span>{{ item.code }}</span>{{ text(item.label) }}</button></div>
-      <p class="results-status" aria-live="polite">{{ loading ? (locale === 'zh' ? '正在加载…' : 'Loading…') : error || (locale === 'zh' ? `显示 ${filteredCount} 条匹配结果。` : `Showing ${filteredCount} matching results.`) }}</p>
-      <div v-if="loading" class="archive-skeleton"><span v-for="n in 4" :key="n"></span></div>
-      <div v-else-if="error" class="empty-state"><strong>{{ error }}</strong><button class="button button-ghost" type="button" @click="load">{{ locale === 'zh' ? '重新加载' : 'Retry' }}</button></div>
-      <div v-else-if="articles.length" class="archive-grid"><ArticleCard v-for="article in articles" :key="article._id" :article="article" /></div>
-      <div v-else class="empty-state"><span class="empty-orbit"></span><h2>{{ locale === 'zh' ? '没有找到匹配文章' : 'No matching notes' }}</h2><p>{{ locale === 'zh' ? '尝试换一个关键词，或清除当前筛选。' : 'Try a different query or clear the filters.' }}</p><button class="button button-ghost" type="button" @click="reset"><X :size="15" />{{ locale === 'zh' ? '清除筛选' : 'Clear filters' }}</button></div>
+    <main id="main" class="archive-page">
+      <section class="section section--articles" aria-labelledby="archive-title">
+        <div class="page-intro reveal">
+          <p class="eyebrow">{{ locale === 'zh' ? '02 / 全部文章' : '02 / All articles' }}</p>
+          <h1 id="archive-title">{{ locale === 'zh' ? '一些值得展开的想法。' : 'Ideas worth unfolding.' }}</h1>
+          <p>{{ locale === 'zh' ? '从实时图形到交互细节，记录每一次判断背后的原因。先选择方向，再打开一篇慢慢读。' : 'From realtime graphics to interaction detail, these notes uncover the reasoning behind each decision. Pick a direction, then open one and take your time.' }}</p>
+        </div>
+
+        <div class="archive-toolbar reveal">
+          <label class="search-field" for="archive-search">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="11" cy="11" r="6.5"></circle>
+              <path d="m16 16 4.5 4.5"></path>
+            </svg>
+            <input
+              id="archive-search"
+              v-model="search"
+              type="search"
+              autocomplete="off"
+              enterkeyhint="search"
+              :placeholder="locale === 'zh' ? '搜索标题、标签…' : 'Search titles, tags…'"
+              :aria-label="locale === 'zh' ? '搜索文章' : 'Search articles'"
+            />
+          </label>
+          <p class="archive-count"><span>{{ String(count).padStart(2, '0') }}</span> {{ locale === 'zh' ? '篇文章' : 'notes' }}</p>
+        </div>
+
+        <div class="archive-bar reveal">
+          <div class="filter-list" role="group" :aria-label="locale === 'zh' ? '文章分类' : 'Article categories'">
+            <button
+              v-for="item in categories"
+              :key="item.id"
+              class="filter-button"
+              :class="{ 'is-active': category === item.id }"
+              type="button"
+              :aria-pressed="category === item.id"
+              @click="pickCategory(item.id)"
+            >{{ text(item.label) }}</button>
+          </div>
+        </div>
+
+        <p class="sr-only" role="status" aria-live="polite">
+          {{ loading ? (locale === 'zh' ? '正在加载文章。' : 'Loading notes.') : (locale === 'zh' ? `显示 ${count} 条匹配结果。` : `Showing ${count} matching results.`) }}
+        </p>
+
+        <div v-if="loading" class="article-grid archive-skeleton" aria-busy="true">
+          <div v-for="n in 4" :key="n" class="note-card"></div>
+        </div>
+        <div v-else-if="error" class="empty-state">
+          <span class="empty-state__orbit" aria-hidden="true"></span>
+          <p>{{ error }}</p>
+          <button class="text-button" type="button" @click="load">{{ locale === 'zh' ? '重新加载' : 'Retry' }}</button>
+        </div>
+        <div v-else-if="articles.length" class="article-grid">
+          <ArticleCard v-for="(article, index) in articles" :key="article._id" :article="article" :index="index" />
+        </div>
+        <div v-else class="empty-state">
+          <span class="empty-state__orbit" aria-hidden="true"></span>
+          <p>{{ locale === 'zh' ? '没有找到匹配文章。' : 'No matching notes found.' }}</p>
+          <button class="text-button" type="button" @click="reset">{{ locale === 'zh' ? '清除筛选' : 'Clear filters' }}</button>
+        </div>
+      </section>
     </main>
   </BlogShell>
 </template>

@@ -2,7 +2,11 @@ import { createRouter, createWebHistory } from 'vue-router';
 import { useSessionStore } from './stores/session';
 export const router = createRouter({
   history: createWebHistory(),
-  scrollBehavior: (to, _from, saved) => saved ?? (to.hash ? { el: to.hash, behavior: 'smooth' } : { top: 0 }),
+  scrollBehavior: (to, from, saved) => {
+    if (saved) return saved;
+    if (!from.matched.length) return;
+    return to.hash ? { el: to.hash, behavior: 'smooth' } : { top: 0 };
+  },
   routes: [
     { path: '/', name: 'home', component: () => import('./views/BlogHomeView.vue') },
     { path: '/articles', name: 'articles', component: () => import('./views/ArticleListView.vue') },
