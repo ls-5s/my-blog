@@ -43,7 +43,7 @@ npm run build
 
 ## Vercel 部署
 
-后端的 `backend/src/app.ts` 同时提供本地 Express 实例和 Vercel 默认函数导出。Vercel 项目使用仓库根目录，并在生产环境配置以下变量：
+根目录的 `vercel.json` 将 `frontend/dist` 作为静态站点，并将 `/api/*` 转发给 `api/index.ts` 中的 Express 函数。Vercel 项目使用仓库根目录，并在生产环境配置以下变量：
 
 - `TURSO_DATABASE_URL`、`TURSO_AUTH_TOKEN`：托管数据库连接信息
 - `JWT_SECRET`：足够长的随机字符串
@@ -51,5 +51,5 @@ npm run build
 - `FRONTEND_ORIGIN`：站点完整地址，例如 `https://your-project.vercel.app`
 - `VITE_API_BASE`：前后端同域时设为 `/api`
 
-运行 `npm run build` 后，前端产物位于 `frontend/dist`，后端 Serverless 入口为 `backend/src/app.ts`。
+运行 `npm run build` 后，前端产物位于 `frontend/dist`。`api/index.ts` 复用后端 `backend/src/app.ts` 的默认 handler，使本地 Express 与 Vercel Serverless 使用同一套路由和初始化逻辑。
 
